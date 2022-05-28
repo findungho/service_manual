@@ -16,6 +16,7 @@ namespace ServiceManual.Web.Controllers
 
         /// <summary>
         ///     HTTP GET: api/factorydevices/
+        ///     Get all devices.
         /// </summary>
         [HttpGet]
         public async Task<IEnumerable<FactoryDeviceDto>> Get()
@@ -42,6 +43,11 @@ namespace ServiceManual.Web.Controllers
             }
         }
 
+        /// <summary>
+        ///     HTTP GET: api/factorydevices/search
+        ///     Search devices by Severity.
+        /// </summary>
+        /// <param name="severity">Severity (int)</param>
         [HttpGet("{search}")]
         public async Task<ActionResult<IEnumerable<FactoryDevice>>> Search(Severity? severity)
         {
@@ -76,7 +82,9 @@ namespace ServiceManual.Web.Controllers
 
         /// <summary>
         ///     HTTP GET: api/factorydevices/1
+        ///     Get device by its Id.
         /// </summary>
+        /// <param name="id">FactoryDevice Id</param>
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get(int id)
         {
@@ -105,7 +113,9 @@ namespace ServiceManual.Web.Controllers
 
         /// <summary>
         ///     HTTP POST: api/factorydevices
+        ///     Create a new device.
         /// </summary>
+        /// <param name="factoryDevice">FactoryDevice object</param>
         [HttpPost]
         public async Task<IActionResult> Create(FactoryDevice factoryDevice)
         {
@@ -126,6 +136,12 @@ namespace ServiceManual.Web.Controllers
             }
         }
 
+        /// <summary>
+        ///     HTTP PUT: api/factorydevices/1
+        ///     Update an existing device.
+        /// </summary>
+        /// <param name="id">FactoryDevice Id</param>
+        /// <param name="factoryDevice">FactoryDevice object</param>
         [HttpPut("{id}")]
         public async Task<ActionResult<FactoryDevice>> Update(int id, FactoryDevice factoryDevice)
         {
@@ -150,6 +166,7 @@ namespace ServiceManual.Web.Controllers
 
         /// <summary>
         ///     HTTP DELETE: api/factorydevices/1
+        ///     Delete a device.
         /// </summary>
         [HttpDelete("{id}")]
         public async Task<ActionResult<FactoryDevice>> Delete(int id)
