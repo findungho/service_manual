@@ -9,6 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<FactoryDeviceContext>
     (opt => opt.UseInMemoryDatabase("ServiceManual"));
 
+// In case usea real database, uncomment following lines to use
+// and comment lines which uses "UseInMemoryDatabase"
+//builder.Services.AddDbContext<FactoryDeviceContext>
+//    (opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddControllers();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
