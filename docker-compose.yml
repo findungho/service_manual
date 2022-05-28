@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  servicemanual.web:
+    image: ${DOCKER_REGISTRY-}servicemanualweb
+    build:
+      context: .
+      dockerfile: ServiceManual.Web/Dockerfile

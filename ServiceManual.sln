@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceManual.Web", "Servic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceManual.UnitTests", "ServiceManual.UnitTests\ServiceManual.UnitTests.csproj", "{0243164C-C71B-46D7-B4BF-03082CE230C9}"
 EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{F324D0BC-D559-48F8-936C-7B9B82B9C552}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{0243164C-C71B-46D7-B4BF-03082CE230C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0243164C-C71B-46D7-B4BF-03082CE230C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0243164C-C71B-46D7-B4BF-03082CE230C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F324D0BC-D559-48F8-936C-7B9B82B9C552}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F324D0BC-D559-48F8-936C-7B9B82B9C552}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F324D0BC-D559-48F8-936C-7B9B82B9C552}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F324D0BC-D559-48F8-936C-7B9B82B9C552}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
