@@ -5,6 +5,7 @@ namespace ServiceManual.ApplicationCore.Entities
     public class FactoryDeviceContext : DbContext
     {
         public DbSet<FactoryDevice> FactoryDevices { get; set; }
+        public DbSet<MaintenanceTask> MaintenanceTasks { get; set; }
         public FactoryDeviceContext(DbContextOptions<FactoryDeviceContext> options)
             : base(options)
         {

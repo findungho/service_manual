@@ -18,43 +18,59 @@ namespace ServiceManual.ApplicationCore.Services
             this._factoryDeviceContext = factoryDeviceContext;
         }
 
+        public ICollection<MaintenanceTask> SortedByTaskSeverity(IEnumerable<MaintenanceTask> tasks)
+        {
+            return tasks.OrderBy(task => task.Severity)
+                        .ThenByDescending(task => task.Created)
+                        .ToList();
+        }
+
         /// <summary>
-        ///     Get all devices from database then sort by Severity and Create date.
+        ///     Get all devices from database then sort by Task Severity and Create date.
         /// </summary>
         public async Task<IEnumerable<FactoryDevice>> GetAll()
         {
-            var factoryDevices = await _factoryDeviceContext.FactoryDevices.ToListAsync();
-            var sortedList = factoryDevices
-              .OrderBy(fd => (int)(fd.Severity))
-              .ThenByDescending(fd => fd.DateCreated)
-              .ToList();
+            var factoryDevices = await _factoryDeviceContext.FactoryDevices
+                                                            .Include(fd => fd.MaintenanceTasks)
+                                                            .ToListAsync();
 
-            return sortedList;
+            var sortedList = factoryDevices.OrderBy(
+                fd =>
+                {
+                    fd.MaintenanceTasks = SortedByTaskSeverity(fd.MaintenanceTasks);
+                    return fd.Id;
+                }).ToList();
+
+            return factoryDevices;
         }
 
         /// <summary>
         ///     Search devices from database by Severity.
         /// </summary>
         /// <param name="severity">Severity (int)</param>
-        public async Task<IEnumerable<FactoryDevice>> Search(Severity? severity)
-        {
-            IQueryable<FactoryDevice> query = _factoryDeviceContext.FactoryDevices;
+        //public async Task<IEnumerable<FactoryDevice>> Search(Severity? severity)
+        //{
+        //    IQueryable<FactoryDevice> query = _factoryDeviceContext.FactoryDevices.Include("MaintenanceTask");
 
-            if (severity != null)
-            {
-                query = query.Where(fd => fd.Severity == severity);
-            }
+        //    if (severity != null)
+        //    {
+        //        query = query.Where(fd => fd.MaintenanceTask.Severity == severity);
+        //    }
 
-            return await query.ToListAsync();
-        }
+        //    return await query.ToListAsync();
+        //}
 
         /// <summary>
         ///     Get a devices by its Id from database.
         /// </summary>
         public async Task<FactoryDevice> Get(int id)
         {
-            return await _factoryDeviceContext.FactoryDevices
+            var result = await _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
                 .FirstOrDefaultAsync(fd => fd.Id == id);
+
+            result.MaintenanceTasks = SortedByTaskSeverity(result.MaintenanceTasks);
+
+            return result;
         }
 
         /// <summary>
@@ -81,7 +97,6 @@ namespace ServiceManual.ApplicationCore.Services
                 result.Name = factoryDevice.Name;
                 result.Year = factoryDevice.Year;
                 result.Type = factoryDevice.Type;
-                result.Severity = factoryDevice.Severity;
 
                 await _factoryDeviceContext.SaveChangesAsync();
 
@@ -106,5 +121,42 @@ namespace ServiceManual.ApplicationCore.Services
                 _factoryDeviceContext.SaveChanges();
             }
         }
+
+        public async Task<IEnumerable<MaintenanceTask>> GetAllTasks(int id)
+        {
+            var fd = await _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
+                .FirstOrDefaultAsync(fd => fd.Id == id);
+
+            if (!fd.MaintenanceTasks.Any()) return Enumerable.Empty<MaintenanceTask>();
+
+            fd.MaintenanceTasks = SortedByTaskSeverity(fd.MaintenanceTasks);
+
+            return fd.MaintenanceTasks;
+        }
+
+        public async Task<IEnumerable<MaintenanceTask>> GetTasksByFDId(int factoryDeviceId, int maintenanceTaskId)
+        {
+            var fd = await _factoryDeviceContext.FactoryDevices.Include("MaintenanceTask")
+                .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
+            var task = new List<MaintenanceTask>();
+
+            if (fd != null)
+            {
+                task = fd.MaintenanceTasks.Where(task => task.Id == maintenanceTaskId).ToList();
+            }
+
+            return task;
+        }
+
+        //public async Task<MaintenanceTask> AddTask(int factoryDeviceId, MaintenanceTask maintenanceTask)
+        //{
+
+        //    var fd = await _factoryDeviceContext.FactoryDevices.Include("MaintenanceTask")
+        //        .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
+        //    var a = await _factoryDeviceContext.AddAsync(maintenanceTask);
+        //    //var result = await _factoryDeviceContext.FactoryDevices;
+        //    await _factoryDeviceContext.SaveChangesAsync();
+        //    return a.Entity;
+        //}
     }
 }

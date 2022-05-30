@@ -9,7 +9,7 @@ namespace ServiceManual.ApplicationCore.Interfaces
     {
         Task<IEnumerable<FactoryDevice>> GetAll();
 
-        Task<IEnumerable<FactoryDevice>> Search(Severity? severity);
+        //Task<IEnumerable<FactoryDevice>> Search(Severity? severity);
 
         Task<FactoryDevice> Get(int id);
 
@@ -18,5 +18,15 @@ namespace ServiceManual.ApplicationCore.Interfaces
         Task<FactoryDevice> Update(FactoryDevice factoryDevice);
 
         void Delete(int id);
+
+        Task<IEnumerable<MaintenanceTask>> GetAllTasks(int factoryDeviceId);
+
+        Task<IEnumerable<MaintenanceTask>> GetTasksByFDId(int factoryDeviceId, int maintenanceTaskId);
+
+        //Task<MaintenanceTask> AddTask(int factoryDeviceId, MaintenanceTask maintenanceTask);
+
+        //Task<MaintenanceTask> UpdateTask(int factoryDeviceId, int maintenanceTaskId, MaintenanceTask maintenanceTask);
+
+        //Task DeleteTask(int FactoryDeviceId, int maintenanceTaskId);
     }
 }
