@@ -1,6 +1,8 @@
 ﻿using ServiceManual.ApplicationCore.Entities;
 using ServiceManual.ApplicationCore.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ServiceManual.Web.Controllers
 {
@@ -15,7 +17,7 @@ namespace ServiceManual.Web.Controllers
         }
 
         /// <summary>
-        ///     HTTP GET: api/factorydevices/
+        ///     HTTP GET: api/factorydevices
         ///     Get all devices.
         /// </summary>
         [HttpGet]
@@ -25,47 +27,37 @@ namespace ServiceManual.Web.Controllers
             {
                 var fds = await _factoryDeviceService.GetAll();
                 var fdDtos = new List<FactoryDeviceDto>();
-                var taskDtos = new List<MaintenanceTaskDto>();
 
                 foreach (var fd in fds)
                 {
-                    if (fd.MaintenanceTasks.Count != 0)
-                    {
-                        foreach (var task in fd.MaintenanceTasks)
-                        {
-                            taskDtos.Add(new MaintenanceTaskDto
-                            {
-                                Id = task.Id,
-                                Status = task.Status.ToString(),
-                                Severity = task.Severity.ToString(),
-                                Description = task.Description,
-                                Created = task.Created,
-                                Updated = task.Updated
-                            });
-                        }
-                    }
-
                     var fdDto = new FactoryDeviceDto
                     {
                         Id = fd.Id,
                         Name = fd.Name,
                         Type = fd.Type,
                         Year = fd.Year,
-                        MaintenanceTasks = taskDtos
+                        MaintenanceTasks = new List<MaintenanceTaskDto>()
                     };
+
+                    foreach (var task in fd.MaintenanceTasks)
+                    {
+                        if (task.FactoryDeviceId == fdDto.Id)
+                        {
+                            fdDto.MaintenanceTasks.Add(new MaintenanceTaskDto
+                            {
+                                Id = task.Id,
+                                Status = task.Status.ToString(),
+                                Severity = task.Severity.ToString(),
+                                Description = task.Description,
+                                Created = task.Created,
+                                Updated = task.Updated,
+                                FactoryDeviceId = fdDto.Id
+                            });
+                        }
+                    }
 
                     fdDtos.Add(fdDto);
                 }
-
-                fdDtos.OrderBy(fd =>
-                {
-                    fd.MaintenanceTasks = fd.MaintenanceTasks
-                        .OrderBy(task => task.Severity)
-                        .ThenByDescending(task => task.Created)
-                        .ToList();
-
-                    return fd.Id;
-                });
 
                 return fdDtos;
             }
@@ -77,56 +69,19 @@ namespace ServiceManual.Web.Controllers
         }
 
         /// <summary>
-        ///     HTTP GET: api/factorydevices/search
-        ///     Search devices by Severity.
-        /// </summary>
-        /// <param name="severity">Severity (int)</param>
-        //[HttpGet("{search}")]
-        //public async Task<ActionResult<IEnumerable<FactoryDevice>>> Search(Severity? severity)
-        //{
-        //    try
-        //    {
-        //        var result = await _factoryDeviceService.Search(severity);
-
-        //        if (result.Any())
-        //        {
-        //            return Ok(result.ToList()
-        //                .Select(fd =>
-        //                    new FactoryDeviceDto
-        //                    {
-        //                        Id = fd.Id,
-        //                        Name = fd.Name,
-        //                        Year = fd.Year,
-        //                        Type = fd.Type,
-        //                        DateCreated = fd.DateCreated,
-        //                        Severity = fd.Severity.ToString()
-        //                    }
-        //            ));
-        //        }
-
-        //        return NotFound();
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error retrieving data from the database");
-        //    }
-        //}
-
-        /// <summary>
         ///     HTTP GET: api/factorydevices/1
         ///     Get device by its Id.
         /// </summary>
-        /// <param name="id">FactoryDevice Id</param>
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> Get(int id)
+        /// <param name="deviceId">FactoryDevice Id</param>
+        [HttpGet("{deviceId:int}")]
+        public async Task<IActionResult> Get(int deviceId)
         {
             try
             {
-                var result = await _factoryDeviceService.Get(id);
+                var result = await _factoryDeviceService.Get(deviceId);
                 var taskDtos = new List<MaintenanceTaskDto>();
 
-                if (result == null) return NotFound();
+                if (result == null) return NotFound($"Factory Device with Id {deviceId} not found!");
 
                 if (result.MaintenanceTasks.Count != 0)
                 {
@@ -191,20 +146,20 @@ namespace ServiceManual.Web.Controllers
         ///     HTTP PUT: api/factorydevices/1
         ///     Update an existing device.
         /// </summary>
-        /// <param name="id">FactoryDevice Id</param>
+        /// <param name="deviceId">FactoryDevice Id</param>
         /// <param name="factoryDevice">FactoryDevice object</param>
-        [HttpPut("{id}")]
-        public async Task<ActionResult<FactoryDevice>> Update(int id, FactoryDevice factoryDevice)
+        [HttpPut("{deviceId:int}")]
+        public async Task<ActionResult<FactoryDevice>> Update(int deviceId, FactoryDevice factoryDevice)
         {
             try
             {
-                if (id != factoryDevice.Id)
+                if (deviceId != factoryDevice.Id)
                     return BadRequest("Factory Device ID mismatch");
 
-                var fdToUpdate = await _factoryDeviceService.Get(id);
+                var fdToUpdate = await _factoryDeviceService.Get(deviceId);
 
                 if (fdToUpdate == null)
-                    return NotFound($"Factory Device with Id = {id} not found");
+                    return NotFound($"Factory Device with Id {deviceId} not found");
 
                 return await _factoryDeviceService.Update(factoryDevice);
             }
@@ -219,19 +174,20 @@ namespace ServiceManual.Web.Controllers
         ///     HTTP DELETE: api/factorydevices/1
         ///     Delete a device.
         /// </summary>
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<FactoryDevice>> Delete(int id)
+        /// <param name="deviceId">Factory Device Id</param>
+        [HttpDelete("{deviceId:int}")]
+        public async Task<ActionResult<FactoryDevice>> Delete(int deviceId)
         {
             try
             {
-                var factoryDeviceToDelete = await _factoryDeviceService.Get(id);
+                var factoryDeviceToDelete = await _factoryDeviceService.Get(deviceId);
 
                 if (factoryDeviceToDelete == null)
                 {
-                    return NotFound($"Factory Device with Id = {id} not found");
+                    return NotFound($"Factory Device with Id = {deviceId} not found");
                 }
 
-                _factoryDeviceService.Delete(id);
+                _factoryDeviceService.Delete(deviceId);
 
                 return Ok($"Deleted {factoryDeviceToDelete.Name}");
             }
@@ -244,14 +200,15 @@ namespace ServiceManual.Web.Controllers
 
         /// <summary>
         ///     HTTP GET: api/factorydevices/1/tasks
-        ///     Get all devices.
+        ///     Get all tasks that belong to specific Factory Device.
         /// </summary>
-        [HttpGet("{id:int}/{tasks}")]
-        public async Task<IEnumerable<MaintenanceTaskDto>> GetAllTasks(int id)
+        /// <param name="deviceId">Factory Device Id</param>
+        [HttpGet("{deviceId:int}/{tasks}")]
+        public async Task<IEnumerable<MaintenanceTaskDto>> GetAllTasks(int deviceId)
         {
             try
             {
-                return (await _factoryDeviceService.GetAllTasks(id)).ToList()
+                return (await _factoryDeviceService.GetAllTasks(deviceId)).ToList()
                     .Select(task =>
                         new MaintenanceTaskDto
                         {
@@ -273,32 +230,133 @@ namespace ServiceManual.Web.Controllers
 
         /// <summary>
         ///     HTTP GET: api/factorydevices/1/tasks/1
-        ///     Get all devices.
+        ///     Get task by task Id.
         /// </summary>
-        //    [HttpGet("{id:int}/tasks/{taskId:int}")]
-        //    public async Task<IEnumerable<MaintenanceTaskDto>> GetTasksByFDId(int factoryDeviceId, int maintenanceTaskId)
-        //    {
-        //        try
-        //        {
-        //            return (await _factoryDeviceService.GetTasksByFDId(factoryDeviceId, maintenanceTaskId)).ToList()
-        //                .Select(task =>
-        //                    new MaintenanceTaskDto
-        //                    {
-        //                        Id = task.Id,
-        //                        FDeviceId = task.FDeviceId,
-        //                        Status = task.Status.ToString(),
-        //                        Severity = task.Severity.ToString(),
-        //                        Description = task.Description,
-        //                        Created = task.Created,
-        //                        Updated = task.Updated
-        //                    }
-        //                );
-        //        }
-        //        catch (Exception)
-        //        {
-        //            return (IEnumerable<MaintenanceTaskDto>)StatusCode(StatusCodes.Status500InternalServerError,
-        //                "Error retrieving data from the database");
-        //        }
-        //    }
+        /// <param name="deviceId">Factory Device Id</param>
+        /// <param name="taskId">MaintenanceTask Id</param>
+        [HttpGet("{deviceId:int}/{tasks}/{taskId:int}")]
+        public async Task<IActionResult> GetTasksByTaskId(int deviceId, int taskId)
+        {
+            try
+            {
+                var result = await _factoryDeviceService.GetTasksByTaskId(deviceId, taskId);
+                if (result == null) return NotFound();
+                MaintenanceTaskDto taskDto = new MaintenanceTaskDto
+                {
+                    Id = result.Id,
+                    Status = result.Status.ToString(),
+                    Severity = result.Severity.ToString(),
+                    Description = result.Description,
+                    Created = result.Created,
+                    Updated = result.Updated
+                };
+
+                return Ok(taskDto);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+
+        /// <summary>
+        ///     HTTP POST: api/factorydevices/1/tasks
+        ///     Add new task to Factory Device.
+        /// </summary>
+        /// <param name="deviceId">Factory Device Id</param>
+        /// <param name="maintenanceTask">MaintenanceTask Object</param>
+        [HttpPost("{deviceId:int}/{tasks}")]
+        public async Task<IActionResult> AddTask(int deviceId, MaintenanceTask maintenanceTask)
+        {
+            try
+            {
+                if (deviceId < 0 && maintenanceTask == null)
+                    return BadRequest();
+
+                maintenanceTask.Created = DateTime.Now;
+                var addTask = await _factoryDeviceService.AddTask(deviceId, maintenanceTask);
+
+                return Ok(new MaintenanceTaskDto
+                {
+                    Id = addTask.Id,
+                    Status = maintenanceTask.Status.ToString(),
+                    Severity = maintenanceTask.Severity.ToString(),
+                    Description = maintenanceTask.Description,
+                    Created = maintenanceTask.Created,
+                    Updated = maintenanceTask.Updated
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new MaintenanceTask record");
+            }
+        }
+
+        /// <summary>
+        ///     HTTP PUT: api/factorydevices/1/tasks/1
+        ///     Update an existing task by task Id.
+        /// </summary>
+        /// <param name="deviceId">Factory Device Id</param>
+        /// <param name="taskId">MaintenanceTask Id</param>
+        /// <param name="maintenanceTask">MaintenanceTask Object</param>
+        [HttpPut("{deviceId:int}/{tasks}/{taskId:int}")]
+        public async Task<IActionResult> UpdateTask(int deviceId, int taskId, MaintenanceTask maintenanceTask)
+        {
+            try
+            {
+                if (deviceId < 0 && taskId < 0 && maintenanceTask == null)
+                    return BadRequest();
+
+                maintenanceTask.Updated = DateTime.Now;
+                var updatedTask = await _factoryDeviceService.UpdateTask(deviceId, taskId, maintenanceTask);
+
+                return Ok(new MaintenanceTaskDto
+                {
+                    Id = updatedTask.Id,
+                    Status = maintenanceTask.Status.ToString(),
+                    Severity = maintenanceTask.Severity.ToString(),
+                    Description = maintenanceTask.Description,
+                    Created = maintenanceTask.Created,
+                    Updated = maintenanceTask.Updated
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new MaintenanceTask record");
+            }
+        }
+
+        /// <summary>
+        ///     HTTP DELETE: api/factorydevices/1/tasks/1
+        ///     Delete a task.
+        /// </summary>
+        /// <param name="deviceId">Factory Device Id</param>
+        /// <param name="taskId">MaintenanceTask Id</param>
+        [HttpDelete("{deviceId:int}/{tasks}/{taskId}")]
+        public async Task<ActionResult<MaintenanceTask>> DeleteTask(int deviceId, int taskId)
+        {
+            try
+            {
+                var taskToDelete = await _factoryDeviceService.GetTasksByTaskId(deviceId, taskId);
+
+                if (taskToDelete == null)
+                {
+                    return NotFound($"MaintenanceTask with Id = {taskId} not found");
+                }
+
+                _factoryDeviceService.DeleteTask(deviceId, taskId);
+
+                return Ok($"Deleted {taskToDelete.Id}");
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
     }
 }

@@ -6,7 +6,7 @@
         public string? Name { get; set; }
         public int Year { get; set; }
         public string? Type { get; set; }
-        public ICollection<MaintenanceTaskDto> MaintenanceTasks { get; set; }
+        public ICollection<MaintenanceTaskDto>? MaintenanceTasks { get; set; }
     }
 
     public class MaintenanceTaskDto
@@ -17,5 +17,6 @@
         public string? Description { get; set; }
         public DateTime Created { get; set; } = DateTime.Now;
         public DateTime Updated { get; set; }
+        public int FactoryDeviceId { get; set; }
     }
 }

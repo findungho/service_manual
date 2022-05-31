@@ -63,15 +63,24 @@ The application includes serveral services:
 
 4. Test the API:
 	The application can be tested by using Swagger. After run the application, open browser, navigate to https://localhost:5001/swagger/index.html
-	+ POST:
+	+ POST add a new device:
 		![POST request body](/screenshots/postrq.png)
 		![POST request response](/screenshots/postrq_rp.png)
-	+ GET all:
-		![GET all](/screenshots/getall_rq.png)
-	+ GET by Id:
-		![GET by Id](/screenshots/get_byid.png)
-	+ SEARCH filter by Severity
-		![Search body](/screenshots/searchrq.png)
-		![Search response](/screenshots/searchrq_rp.png)
-	+ DELETE
-		![DELETE](/screenshots/deleterq_rp.png)
+	+ GET all devices:
+		![GET all devices](/screenshots/getall_rq.png)
+	+ GET device by Id:
+		![GET device by Id](/screenshots/get_byid.png)
+	+ DELETE device:
+		![DELETE a device](/screenshots/deleterq_rp.png)
+	+ GET all tasks of one device:
+		![Get all tasks of 1 device](/screenshots/gettask_of_1dev.png)
+	+ GET task by task Id:
+		![GET task by task Id](/screenshots/gettask_by_taskid.png)
+	+ POST add a new task to a specific device
+		![POST addTask body](/screenshots/addtask_body.png)
+		![POST addTask response](/screenshots/addtask_rp.png)
+	+ PUT update an existing task:
+		![PUT updateTask body](/screenshots/updateTask_body.png)
+		![PUT updateTask response](/screenshots/updateTask_rp.png)
+	+ DELETE a task:
+		![DELETE a task](/screenshots/deleteTask.png)

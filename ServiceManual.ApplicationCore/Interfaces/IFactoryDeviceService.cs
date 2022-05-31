@@ -9,24 +9,22 @@ namespace ServiceManual.ApplicationCore.Interfaces
     {
         Task<IEnumerable<FactoryDevice>> GetAll();
 
-        //Task<IEnumerable<FactoryDevice>> Search(Severity? severity);
-
-        Task<FactoryDevice> Get(int id);
+        Task<FactoryDevice> Get(int factoryDeviceId);
 
         Task<FactoryDevice> Add(FactoryDevice factoryDevice);
 
         Task<FactoryDevice> Update(FactoryDevice factoryDevice);
 
-        void Delete(int id);
+        void Delete(int factoryDeviceId);
 
         Task<IEnumerable<MaintenanceTask>> GetAllTasks(int factoryDeviceId);
 
-        Task<IEnumerable<MaintenanceTask>> GetTasksByFDId(int factoryDeviceId, int maintenanceTaskId);
+        Task<MaintenanceTask> GetTasksByTaskId(int factoryDeviceId, int maintenanceTaskId);
 
-        //Task<MaintenanceTask> AddTask(int factoryDeviceId, MaintenanceTask maintenanceTask);
+        Task<MaintenanceTask> AddTask(int factoryDeviceId, MaintenanceTask maintenanceTask);
 
-        //Task<MaintenanceTask> UpdateTask(int factoryDeviceId, int maintenanceTaskId, MaintenanceTask maintenanceTask);
+        Task<MaintenanceTask> UpdateTask(int factoryDeviceId, int maintenanceTaskId, MaintenanceTask maintenanceTask);
 
-        //Task DeleteTask(int FactoryDeviceId, int maintenanceTaskId);
+        void DeleteTask(int factoryDeviceId, int maintenanceTaskId);
     }
 }

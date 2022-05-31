@@ -22,13 +22,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "screenshots", "screenshots", "{854DB3BB-9008-444A-973A-EC4FC0852398}"
 	ProjectSection(SolutionItems) = preProject
+		screenshots\addtask_body.png = screenshots\addtask_body.png
+		screenshots\addtask_rp.png = screenshots\addtask_rp.png
 		..\..\..\Downloads\deleterq_rp.png = ..\..\..\Downloads\deleterq_rp.png
+		screenshots\deleteTask.png = screenshots\deleteTask.png
 		..\..\..\Downloads\getall_rq.png = ..\..\..\Downloads\getall_rq.png
+		screenshots\gettask_by_taskid.png = screenshots\gettask_by_taskid.png
+		screenshots\gettask_of_1dev.png = screenshots\gettask_of_1dev.png
 		..\..\..\Downloads\get_byid.png = ..\..\..\Downloads\get_byid.png
-		..\..\..\Downloads\postrq.png = ..\..\..\Downloads\postrq.png
-		..\..\..\Downloads\postrq_rp.png = ..\..\..\Downloads\postrq_rp.png
-		..\..\..\Downloads\searchrq.png = ..\..\..\Downloads\searchrq.png
-		..\..\..\Downloads\searchrq_rp.png = ..\..\..\Downloads\searchrq_rp.png
+		screenshots\postrq.png = screenshots\postrq.png
+		screenshots\postrq_rp.png = screenshots\postrq_rp.png
+		screenshots\updateTask_body.png = screenshots\updateTask_body.png
+		screenshots\updateTask_rp.png = screenshots\updateTask_rp.png
 	EndProjectSection
 EndProject
 Global

@@ -33,6 +33,23 @@ namespace ServiceManual.ApplicationCore.Services
             var factoryDevices = await _factoryDeviceContext.FactoryDevices
                                                             .Include(fd => fd.MaintenanceTasks)
                                                             .ToListAsync();
+            //var newListOfFD = new List<FactoryDevice>();
+
+            //foreach (var factoryDevice in factoryDevices)
+            //{
+            //    if (factoryDevice.MaintenanceTasks.Count != 0)
+            //    {
+            //        foreach(var task in factoryDevice.MaintenanceTasks)
+            //        {
+            //            if (task.FactoryDeviceId != factoryDevice.Id)
+            //            {
+            //                factoryDevice.MaintenanceTasks = null;
+            //            }
+            //        }
+            //    }
+
+            //    newListOfFD.Add(factoryDevice);
+            //}
 
             var sortedList = factoryDevices.OrderBy(
                 fd =>
@@ -41,32 +58,19 @@ namespace ServiceManual.ApplicationCore.Services
                     return fd.Id;
                 }).ToList();
 
-            return factoryDevices;
+            return sortedList;
         }
-
-        /// <summary>
-        ///     Search devices from database by Severity.
-        /// </summary>
-        /// <param name="severity">Severity (int)</param>
-        //public async Task<IEnumerable<FactoryDevice>> Search(Severity? severity)
-        //{
-        //    IQueryable<FactoryDevice> query = _factoryDeviceContext.FactoryDevices.Include("MaintenanceTask");
-
-        //    if (severity != null)
-        //    {
-        //        query = query.Where(fd => fd.MaintenanceTask.Severity == severity);
-        //    }
-
-        //    return await query.ToListAsync();
-        //}
 
         /// <summary>
         ///     Get a devices by its Id from database.
         /// </summary>
+        /// <param name="id">Factory Device Id</param>
         public async Task<FactoryDevice> Get(int id)
         {
             var result = await _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
                 .FirstOrDefaultAsync(fd => fd.Id == id);
+
+            if (result == null) return null;
 
             result.MaintenanceTasks = SortedByTaskSeverity(result.MaintenanceTasks);
 
@@ -76,6 +80,7 @@ namespace ServiceManual.ApplicationCore.Services
         /// <summary>
         ///     Add a new device to the database.
         /// </summary>
+        /// <param name="factoryDevice">Factory Device object</param>
         public async Task<FactoryDevice> Add(FactoryDevice factoryDevice)
         {
             var result = await _factoryDeviceContext.FactoryDevices.AddAsync(factoryDevice);
@@ -110,10 +115,10 @@ namespace ServiceManual.ApplicationCore.Services
         ///     Delete an existing device from database by its Id.
         /// </summary>
         /// <param name="id">FactoryDevice Id</param>
-        public async void Delete(int id)
+        public async void Delete(int factoryDeviceId)
         {
             var result = await _factoryDeviceContext.FactoryDevices
-                .FirstOrDefaultAsync(fd => fd.Id == id);
+                .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
 
             if (result != null)
             {
@@ -122,10 +127,14 @@ namespace ServiceManual.ApplicationCore.Services
             }
         }
 
-        public async Task<IEnumerable<MaintenanceTask>> GetAllTasks(int id)
+        /// <summary>
+        ///     Get all tasks that belong to a specific Factory Device Id.
+        /// </summary>
+        /// <param name="id">FactoryDevice Id</param>
+        public async Task<IEnumerable<MaintenanceTask>> GetAllTasks(int factoryDeviceId)
         {
             var fd = await _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
-                .FirstOrDefaultAsync(fd => fd.Id == id);
+                .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
 
             if (!fd.MaintenanceTasks.Any()) return Enumerable.Empty<MaintenanceTask>();
 
@@ -134,29 +143,91 @@ namespace ServiceManual.ApplicationCore.Services
             return fd.MaintenanceTasks;
         }
 
-        public async Task<IEnumerable<MaintenanceTask>> GetTasksByFDId(int factoryDeviceId, int maintenanceTaskId)
+        /// <summary>
+        ///     Get task by task Id.
+        /// </summary>
+        /// <param name="factoryDeviceId">FactoryDevice Id</param>
+        /// <param name="maintenanceTaskId">MaintenanceTask Id</param>
+        public async Task<MaintenanceTask> GetTasksByTaskId(int factoryDeviceId, int maintenanceTaskId)
         {
-            var fd = await _factoryDeviceContext.FactoryDevices.Include("MaintenanceTask")
+            var fd = await _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
                 .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
-            var task = new List<MaintenanceTask>();
+            var task = new MaintenanceTask();
 
             if (fd != null)
             {
-                task = fd.MaintenanceTasks.Where(task => task.Id == maintenanceTaskId).ToList();
+                task = fd.MaintenanceTasks.FirstOrDefault(task => task.Id == maintenanceTaskId);
             }
 
             return task;
         }
 
-        //public async Task<MaintenanceTask> AddTask(int factoryDeviceId, MaintenanceTask maintenanceTask)
-        //{
+        /// <summary>
+        ///     Add a new task for a Factory Device.
+        /// </summary>
+        /// <param name="factoryDeviceId">FactoryDevice Id</param>
+        /// <param name="maintenanceTask">MaintenanceTask object</param>
+        public async Task<MaintenanceTask> AddTask(int factoryDeviceId, MaintenanceTask maintenanceTask)
+        {
 
-        //    var fd = await _factoryDeviceContext.FactoryDevices.Include("MaintenanceTask")
-        //        .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
-        //    var a = await _factoryDeviceContext.AddAsync(maintenanceTask);
-        //    //var result = await _factoryDeviceContext.FactoryDevices;
-        //    await _factoryDeviceContext.SaveChangesAsync();
-        //    return a.Entity;
-        //}
+            var fd = await _factoryDeviceContext.FactoryDevices
+                .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
+
+            maintenanceTask.FactoryDeviceId = factoryDeviceId;
+
+            var result = await _factoryDeviceContext.AddAsync(maintenanceTask);
+            await _factoryDeviceContext.SaveChangesAsync();
+            return result.Entity;
+        }
+
+        /// <summary>
+        ///     Update an existing MaintenanceTask.
+        /// </summary>
+        /// <param name="factoryDeviceId">FactoryDevice Id</param>
+        /// <param name="maintenanceTaskId">MaintenanceTask Id</param>
+        /// <param name="maintenanceTask">MaintenanceTask object</param>
+        public async Task<MaintenanceTask> UpdateTask(int factoryDeviceId, int maintenanceTaskId, MaintenanceTask maintenanceTask)
+        {
+            var result = await _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
+                .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
+
+            if (result != null && result.MaintenanceTasks.Count != 0)
+            {
+                var taskToUpdate = result.MaintenanceTasks.FirstOrDefault(task => task.Id == maintenanceTaskId);
+                if (taskToUpdate != null)
+                {
+                    taskToUpdate.FactoryDeviceId = factoryDeviceId;
+                    taskToUpdate.Status = maintenanceTask.Status;
+                    taskToUpdate.Severity = maintenanceTask.Severity;
+                    taskToUpdate.Description = maintenanceTask.Description;
+                    taskToUpdate.Updated = DateTime.Now;
+
+                    await _factoryDeviceContext.SaveChangesAsync();
+
+                    return taskToUpdate;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        ///     Delete an existing task from database by its Id
+        ///     from a Factory Device Id where it belongs to.
+        /// </summary>
+        /// <param name="id">FactoryDevice Id</param>
+        /// <param name="maintenanceTaskId">MaintenanceTask Id</param>
+        public void DeleteTask(int factoryDeviceId, int maintenanceTaskId)
+        {
+            var result = _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
+                .FirstOrDefault(fd => fd.Id == factoryDeviceId);
+
+            if (result != null)
+            {
+                var taskToDelete = result.MaintenanceTasks.FirstOrDefault(task => task.Id == maintenanceTaskId);
+                result.MaintenanceTasks.Remove(taskToDelete);
+                _factoryDeviceContext.SaveChanges();
+            }
+        }
     }
 }
