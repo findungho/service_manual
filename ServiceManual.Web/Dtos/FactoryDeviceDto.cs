@@ -6,7 +6,7 @@
         public string? Name { get; set; }
         public int Year { get; set; }
         public string? Type { get; set; }
-        public ICollection<MaintenanceTaskDto>? MaintenanceTasks { get; set; }
+        public ICollection<MaintenanceTaskDto> MaintenanceTasks { get; set; }
     }
 
     public class MaintenanceTaskDto

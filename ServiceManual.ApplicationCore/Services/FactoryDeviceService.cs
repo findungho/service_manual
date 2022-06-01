@@ -33,23 +33,6 @@ namespace ServiceManual.ApplicationCore.Services
             var factoryDevices = await _factoryDeviceContext.FactoryDevices
                                                             .Include(fd => fd.MaintenanceTasks)
                                                             .ToListAsync();
-            //var newListOfFD = new List<FactoryDevice>();
-
-            //foreach (var factoryDevice in factoryDevices)
-            //{
-            //    if (factoryDevice.MaintenanceTasks.Count != 0)
-            //    {
-            //        foreach(var task in factoryDevice.MaintenanceTasks)
-            //        {
-            //            if (task.FactoryDeviceId != factoryDevice.Id)
-            //            {
-            //                factoryDevice.MaintenanceTasks = null;
-            //            }
-            //        }
-            //    }
-
-            //    newListOfFD.Add(factoryDevice);
-            //}
 
             var sortedList = factoryDevices.OrderBy(
                 fd =>
@@ -133,8 +116,11 @@ namespace ServiceManual.ApplicationCore.Services
         /// <param name="id">FactoryDevice Id</param>
         public async Task<IEnumerable<MaintenanceTask>> GetAllTasks(int factoryDeviceId)
         {
-            var fd = await _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
-                .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
+            var fd = await _factoryDeviceContext.FactoryDevices
+                                                .Include(fd => fd.MaintenanceTasks)
+                                                .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
+
+            if (fd == null) return null;
 
             if (!fd.MaintenanceTasks.Any()) return Enumerable.Empty<MaintenanceTask>();
 
@@ -150,16 +136,16 @@ namespace ServiceManual.ApplicationCore.Services
         /// <param name="maintenanceTaskId">MaintenanceTask Id</param>
         public async Task<MaintenanceTask> GetTasksByTaskId(int factoryDeviceId, int maintenanceTaskId)
         {
-            var fd = await _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
-                .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
-            var task = new MaintenanceTask();
+            var fd = await _factoryDeviceContext.FactoryDevices
+                                                .Include(fd => fd.MaintenanceTasks)
+                                                .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
 
             if (fd != null)
             {
-                task = fd.MaintenanceTasks.FirstOrDefault(task => task.Id == maintenanceTaskId);
+                return fd.MaintenanceTasks.FirstOrDefault(task => task.Id == maintenanceTaskId);
             }
 
-            return task;
+            return null;
         }
 
         /// <summary>
@@ -173,11 +159,14 @@ namespace ServiceManual.ApplicationCore.Services
             var fd = await _factoryDeviceContext.FactoryDevices
                 .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
 
-            maintenanceTask.FactoryDeviceId = factoryDeviceId;
+            if (fd == null) return null;
 
-            var result = await _factoryDeviceContext.AddAsync(maintenanceTask);
+            maintenanceTask.FactoryDeviceId = factoryDeviceId;
+            maintenanceTask.Created = DateTime.Now;
+            var taskToAdd = await _factoryDeviceContext.AddAsync(maintenanceTask);
             await _factoryDeviceContext.SaveChangesAsync();
-            return result.Entity;
+
+            return taskToAdd.Entity;
         }
 
         /// <summary>
@@ -188,8 +177,9 @@ namespace ServiceManual.ApplicationCore.Services
         /// <param name="maintenanceTask">MaintenanceTask object</param>
         public async Task<MaintenanceTask> UpdateTask(int factoryDeviceId, int maintenanceTaskId, MaintenanceTask maintenanceTask)
         {
-            var result = await _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
-                .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
+            var result = await _factoryDeviceContext.FactoryDevices
+                                                    .Include(fd => fd.MaintenanceTasks)
+                                                    .FirstOrDefaultAsync(fd => fd.Id == factoryDeviceId);
 
             if (result != null && result.MaintenanceTasks.Count != 0)
             {
@@ -219,8 +209,9 @@ namespace ServiceManual.ApplicationCore.Services
         /// <param name="maintenanceTaskId">MaintenanceTask Id</param>
         public void DeleteTask(int factoryDeviceId, int maintenanceTaskId)
         {
-            var result = _factoryDeviceContext.FactoryDevices.Include(fd => fd.MaintenanceTasks)
-                .FirstOrDefault(fd => fd.Id == factoryDeviceId);
+            var result = _factoryDeviceContext.FactoryDevices
+                                              .Include(fd => fd.MaintenanceTasks)
+                                              .FirstOrDefault(fd => fd.Id == factoryDeviceId);
 
             if (result != null)
             {
