@@ -11,12 +11,16 @@ _This is a basic service manual application that manages the factory devices for
 - The Service manual implemented by using .Net 6.0. The application was using "UseInMemoryDatabase" from EntityFrameworkCore for development purpose. In production, it can be used different database engines, here I used Mysql Server configuration.
 The application includes serveral services:
 
-    + Get all factory devices and sort by the Severity and CreatedDate.
-	+ Get specific factry device by its Id.
-	+ Add new factory device.
-	+ Update an existing device by its Id.
-	+ Delete a factory device based on its Id.
-	+ Search all factory devices that based on their Severity.
+    + Get all factory devices and sort all related tasks by the Severity and Created date.
+    + Get specific factry device by its Id.
+    + Add new factory device.
+    + Update an existing device by its Id.
+    + Delete a factory device based on its Id.
+    + Get all tasks that belong to a specific device.
+    + Get task by task Id.
+    + Add a new task to a specific device.
+    + Update an existing task by task Id.
+    + Delete an existing task by task Id.
     
 
 ## Requirements
